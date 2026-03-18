@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+@theme {
+  --color-shiftmed-dark: #0B1120;
+  --color-shiftmed-green: #10B981;
+}
