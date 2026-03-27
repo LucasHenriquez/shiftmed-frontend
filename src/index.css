@@ -1,6 +1,40 @@
 @import "tailwindcss";
 
+/* 👇 AQUÍ LE ENSEÑAMOS TUS COLORES A TAILWIND V4 👇 */
 @theme {
-  --color-shiftmed-dark: #0B1120;
-  --color-shiftmed-green: #10B981;
+  --color-shiftmed-green: #10b981; /* Tu verde esmeralda */
+  --color-shiftmed-dark: #0f172a;  /* Tu azul muy oscuro / negro */
+}
+
+/* =========================================
+   MIS UTILIDADES (Animaciones)
+   ========================================= */
+.animation-fadeIn {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* =========================================
+   🔍 FUNCIONES DE RENDIMIENTO Y TABLAS
+   ========================================= */
+html.no-anim * { 
+  transition: none !important; 
+  animation: none !important; 
+}
+
+html[data-densidad="compacta"] th, html[data-densidad="compacta"] td { 
+  padding-top: 0.5rem !important; 
+  padding-bottom: 0.5rem !important; 
 }
