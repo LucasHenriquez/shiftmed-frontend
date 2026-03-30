@@ -42,7 +42,8 @@ export default function ModalTurno({ modalCrearTurno, setModalCrearTurno, modoEd
           </div>
           
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="block text-sm font-bold text-slate-700 mb-1">Fecha del Turno</label><input type="date" required value={nuevoTurno.fecha} onChange={(e) => setNuevoTurno({...nuevoTurno, fecha: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-shiftmed-green bg-slate-50 font-medium text-slate-700" /></div>
+            {/* 👇 AQUÍ ESTÁ LA MAGIA DEL min={...} 👇 */}
+            <div><label className="block text-sm font-bold text-slate-700 mb-1">Fecha del Turno</label><input type="date" required min={new Date().toISOString().split("T")[0]} value={nuevoTurno.fecha} onChange={(e) => setNuevoTurno({...nuevoTurno, fecha: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-shiftmed-green bg-slate-50 font-medium text-slate-700" /></div>
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-1">Rango Horario</label>
               <select required value={nuevoTurno.horario} onChange={(e) => setNuevoTurno({...nuevoTurno, horario: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-shiftmed-green bg-slate-50 font-medium">
