@@ -41,7 +41,9 @@ function DashboardPage({ setVistaActual, usuarioActivo, setUsuarioActivo }) {
   const [turnoAAsignar, setTurnoAAsignar] = useState(null);
   const [medicoSeleccionado, setMedicoSeleccionado] = useState('');
 
-  const [nuevoTurno, setNuevoTurno] = useState({ centro_id: '', especialidad: '', tipo_servicio: '', fecha: '', horario: '', valor_turno: '', ubicacion_especifica: '', descripcion: '' });
+  // 👇 AÑADIDO nivel_urgencia 👇
+  const [nuevoTurno, setNuevoTurno] = useState({ centro_id: '', especialidad: '', tipo_servicio: '', fecha: '', horario: '', valor_turno: '', ubicacion_especifica: '', descripcion: '', nivel_urgencia: 'Normal' });
+  
   const [nuevoProfesional, setNuevoProfesional] = useState({ nombres: '', apellidos: '', rut: '', fecha_nacimiento: '', registro_sis: '', especialidad: '', email: '', telefono: '' });
   const [nuevoCentro, setNuevoCentro] = useState({ nombre: '', direccion: '', ciudad: '', latitud: '', longitud: '' });
 
@@ -79,24 +81,20 @@ function DashboardPage({ setVistaActual, usuarioActivo, setUsuarioActivo }) {
     Promise.all([fetchCentros(), fetchTurnos(), fetchProfesionales()]).then(() => setCargando(false));
   }, [seccionActiva]);
 
-  // 👇 EL GUARDIÁN DE LA MEMORIA (Agregado perfectamente) 👇
+  // 👇 EL GUARDIÁN DE LA MEMORIA 👇
   useEffect(() => {
     const root = document.documentElement;
     const temaGuardado = localStorage.getItem('shiftmed_tema') || 'claro';
     const animacionesGuardadas = localStorage.getItem('shiftmed_animaciones') !== 'false';
     const densidadGuardada = localStorage.getItem('shiftmed_densidad') || 'comoda';
 
-    // 1. Aplicar Tema (Modo Oscuro)
     if (temaGuardado === 'oscuro' || (temaGuardado === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
     }
 
-    // 2. Aplicar Densidad
     root.setAttribute('data-densidad', densidadGuardada);
-
-    // 3. Aplicar Animaciones
     if (!animacionesGuardadas) root.classList.add('no-anim');
   }, []);
 
@@ -149,8 +147,11 @@ function DashboardPage({ setVistaActual, usuarioActivo, setUsuarioActivo }) {
   // ==========================================
   // 📝 CRUD DE TURNOS 
   // ==========================================
-  const abrirModalCrearTurno = () => { setModoEdicion(false); setIdEditando(null); setNuevoTurno({ centro_id: '', especialidad: '', tipo_servicio: '', fecha: '', horario: '', valor_turno: '', ubicacion_especifica: '', descripcion: '' }); setModalCrearTurno(true); };
-  const abrirModalEditarTurno = (turno) => { setModoEdicion(true); setIdEditando(turno.id); setNuevoTurno({ centro_id: turno.centro_id || centros[0]?.id || '', especialidad: turno.especialidad_requerida || '', tipo_servicio: turno.tipo_servicio || '', fecha: turno.fecha_turno?.split('T')[0] || '', horario: turno.horario || '', valor_turno: turno.valor_turno ? formatearDinero(turno.valor_turno.toString()) : '', ubicacion_especifica: turno.ubicacion_especifica || '', descripcion: turno.descripcion || '' }); setModalCrearTurno(true); };
+  // 👇 AÑADIDO nivel_urgencia AL ABRIR EL MODAL 👇
+  const abrirModalCrearTurno = () => { setModoEdicion(false); setIdEditando(null); setNuevoTurno({ centro_id: '', especialidad: '', tipo_servicio: '', fecha: '', horario: '', valor_turno: '', ubicacion_especifica: '', descripcion: '', nivel_urgencia: 'Normal' }); setModalCrearTurno(true); };
+  
+  // 👇 AÑADIDO nivel_urgencia A LA EDICIÓN 👇
+  const abrirModalEditarTurno = (turno) => { setModoEdicion(true); setIdEditando(turno.id); setNuevoTurno({ centro_id: turno.centro_id || centros[0]?.id || '', especialidad: turno.especialidad_requerida || '', tipo_servicio: turno.tipo_servicio || '', fecha: turno.fecha_turno?.split('T')[0] || '', horario: turno.horario || '', valor_turno: turno.valor_turno ? formatearDinero(turno.valor_turno.toString()) : '', ubicacion_especifica: turno.ubicacion_especifica || '', descripcion: turno.descripcion || '', nivel_urgencia: turno.nivel_urgencia || 'Normal' }); setModalCrearTurno(true); };
 
   const handleCrearTurno = async (e) => {
     e.preventDefault();
@@ -159,7 +160,23 @@ function DashboardPage({ setVistaActual, usuarioActivo, setUsuarioActivo }) {
     const url = modoEdicion ? `http://localhost:3000/api/ofertas/${idEditando}` : 'http://localhost:3000/api/ofertas';
     const method = modoEdicion ? 'PUT' : 'POST';
     try {
-      const res = await fetch(url, { method: method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ centro_id: nuevoTurno.centro_id, especialidad_requerida: nuevoTurno.especialidad, fecha_turno: nuevoTurno.fecha, horario: nuevoTurno.horario, valor_turno: limpiarDinero(nuevoTurno.valor_turno), tipo_servicio: nuevoTurno.tipo_servicio, ubicacion_especifica: nuevoTurno.ubicacion_especifica, descripcion: nuevoTurno.descripcion }) });
+      // 👇 AÑADIDO nivel_urgencia AL ENVÍO AL SERVIDOR 👇
+      const res = await fetch(url, { 
+        method: method, 
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+        body: JSON.stringify({ 
+          centro_id: nuevoTurno.centro_id, 
+          especialidad_requerida: nuevoTurno.especialidad, 
+          fecha_turno: nuevoTurno.fecha, 
+          horario: nuevoTurno.horario, 
+          valor_turno: limpiarDinero(nuevoTurno.valor_turno), 
+          tipo_servicio: nuevoTurno.tipo_servicio, 
+          ubicacion_especifica: nuevoTurno.ubicacion_especifica, 
+          descripcion: nuevoTurno.descripcion,
+          nivel_urgencia: nuevoTurno.nivel_urgencia 
+        }) 
+      });
+      
       if (res.ok) { toast.success(modoEdicion ? 'Turno actualizado con éxito.' : 'Turno publicado.', { id: toastId }); setModalCrearTurno(false); fetchTurnos(); } else { throw new Error('Error al guardar'); }
     } catch (error) { toast.error('Fallo al guardar en la base de datos.', { id: toastId }); }
   };
@@ -171,6 +188,30 @@ function DashboardPage({ setVistaActual, usuarioActivo, setUsuarioActivo }) {
       const res = await fetch(`http://localhost:3000/api/ofertas/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
       if(res.ok) { toast.success('Turno cancelado'); fetchTurnos(); } else { toast.error('Error al cancelar el turno'); }
     } catch (error) { console.error(error); }
+  };
+
+  const cambiarEstadoTurno = async (idTurno, nuevoEstado) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:3000/api/ofertas/${idTurno}/estado`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ estado: nuevoEstado })
+      });
+
+      if (res.ok) {
+        toast.success(`Turno marcado como ${nuevoEstado} exitosamente.`);
+        fetchTurnos(); 
+      } else {
+        toast.error('No se pudo actualizar el estado del turno.');
+      }
+    } catch (error) {
+      console.error('Error al cambiar estado:', error);
+      toast.error('Error de conexión al servidor.');
+    }
   };
 
   // ==========================================
@@ -240,11 +281,11 @@ function DashboardPage({ setVistaActual, usuarioActivo, setUsuarioActivo }) {
 
         <div className="flex-1 overflow-y-auto p-8 pb-24 hide-scrollbar">
           {seccionActiva === 'panel' && <VistaPanel turnos={turnos} profesionales={profesionales} cargando={cargando} abrirModalCrearTurno={abrirModalCrearTurno} setSeccionActiva={setSeccionActiva} />}
-          {seccionActiva === 'turnos' && <VistaTurnos turnos={turnos} cargando={cargando} abrirModalCrearTurno={abrirModalCrearTurno} abrirModalAsignar={abrirModalAsignar} abrirModalEditarTurno={abrirModalEditarTurno} eliminarTurno={eliminarTurno} />}
+          
+          {seccionActiva === 'turnos' && <VistaTurnos turnos={turnos} cargando={cargando} abrirModalCrearTurno={abrirModalCrearTurno} abrirModalAsignar={abrirModalAsignar} abrirModalEditarTurno={abrirModalEditarTurno} eliminarTurno={eliminarTurno} cambiarEstadoTurno={cambiarEstadoTurno} />}
+          
           {seccionActiva === 'profesionales' && <VistaProfesionales profesionalesFiltrados={profesionalesFiltrados} cargando={cargando} filtroEspecialidad={filtroEspecialidad} setFiltroEspecialidad={setFiltroEspecialidad} abrirModalCrearProf={abrirModalCrearProf} abrirModalEditarProf={abrirModalEditarProf} eliminarProfesional={eliminarProfesional} />}
           {seccionActiva === 'centros' && <VistaCentros centros={centros} cargando={cargando} abrirModalCrearCentro={abrirModalCrearCentro} abrirModalEditarCentro={abrirModalEditarCentro} eliminarCentro={eliminarCentro} />}
-          
-          {/* ✨ AQUÍ RENDERIZAMOS LA VISTA DE AJUSTES ✨ */}
           {seccionActiva === 'ajustes' && <VistaAjustes />}
         </div>
       </main>
