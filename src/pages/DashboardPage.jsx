@@ -41,8 +41,8 @@ function DashboardPage({ setVistaActual, usuarioActivo, setUsuarioActivo }) {
   const [turnoAAsignar, setTurnoAAsignar] = useState(null);
   const [medicoSeleccionado, setMedicoSeleccionado] = useState('');
 
-  // 👇 AÑADIDO nivel_urgencia 👇
-  const [nuevoTurno, setNuevoTurno] = useState({ centro_id: '', especialidad: '', tipo_servicio: '', fecha: '', horario: '', valor_turno: '', ubicacion_especifica: '', descripcion: '', nivel_urgencia: 'Normal' });
+  // 👇 ESTADO LIMPIO: Sin "horario" de texto ni "urgencia", ahora usa hora_inicio y hora_fin 👇
+  const [nuevoTurno, setNuevoTurno] = useState({ centro_id: '', especialidad: '', tipo_servicio: '', fecha: '', hora_inicio: '', hora_fin: '', valor_turno: '', ubicacion_especifica: '', descripcion: '' });
   
   const [nuevoProfesional, setNuevoProfesional] = useState({ nombres: '', apellidos: '', rut: '', fecha_nacimiento: '', registro_sis: '', especialidad: '', email: '', telefono: '' });
   const [nuevoCentro, setNuevoCentro] = useState({ nombre: '', direccion: '', ciudad: '', latitud: '', longitud: '' });
@@ -147,11 +147,11 @@ function DashboardPage({ setVistaActual, usuarioActivo, setUsuarioActivo }) {
   // ==========================================
   // 📝 CRUD DE TURNOS 
   // ==========================================
-  // 👇 AÑADIDO nivel_urgencia AL ABRIR EL MODAL 👇
-  const abrirModalCrearTurno = () => { setModoEdicion(false); setIdEditando(null); setNuevoTurno({ centro_id: '', especialidad: '', tipo_servicio: '', fecha: '', horario: '', valor_turno: '', ubicacion_especifica: '', descripcion: '', nivel_urgencia: 'Normal' }); setModalCrearTurno(true); };
+  // 👇 ACTUALIZADO: Limpio al abrir 👇
+  const abrirModalCrearTurno = () => { setModoEdicion(false); setIdEditando(null); setNuevoTurno({ centro_id: '', especialidad: '', tipo_servicio: '', fecha: '', hora_inicio: '', hora_fin: '', valor_turno: '', ubicacion_especifica: '', descripcion: '' }); setModalCrearTurno(true); };
   
-  // 👇 AÑADIDO nivel_urgencia A LA EDICIÓN 👇
-  const abrirModalEditarTurno = (turno) => { setModoEdicion(true); setIdEditando(turno.id); setNuevoTurno({ centro_id: turno.centro_id || centros[0]?.id || '', especialidad: turno.especialidad_requerida || '', tipo_servicio: turno.tipo_servicio || '', fecha: turno.fecha_turno?.split('T')[0] || '', horario: turno.horario || '', valor_turno: turno.valor_turno ? formatearDinero(turno.valor_turno.toString()) : '', ubicacion_especifica: turno.ubicacion_especifica || '', descripcion: turno.descripcion || '', nivel_urgencia: turno.nivel_urgencia || 'Normal' }); setModalCrearTurno(true); };
+  // 👇 ACTUALIZADO: Lee hora_inicio y hora_fin de la base de datos para editar 👇
+  const abrirModalEditarTurno = (turno) => { setModoEdicion(true); setIdEditando(turno.id); setNuevoTurno({ centro_id: turno.centro_id || centros[0]?.id || '', especialidad: turno.especialidad_requerida || '', tipo_servicio: turno.tipo_servicio || '', fecha: turno.fecha_turno?.split('T')[0] || '', hora_inicio: turno.hora_inicio || '', hora_fin: turno.hora_fin || '', valor_turno: turno.valor_turno ? formatearDinero(turno.valor_turno.toString()) : '', ubicacion_especifica: turno.ubicacion_especifica || '', descripcion: turno.descripcion || '' }); setModalCrearTurno(true); };
 
   const handleCrearTurno = async (e) => {
     e.preventDefault();
@@ -160,7 +160,7 @@ function DashboardPage({ setVistaActual, usuarioActivo, setUsuarioActivo }) {
     const url = modoEdicion ? `http://localhost:3000/api/ofertas/${idEditando}` : 'http://localhost:3000/api/ofertas';
     const method = modoEdicion ? 'PUT' : 'POST';
     try {
-      // 👇 AÑADIDO nivel_urgencia AL ENVÍO AL SERVIDOR 👇
+      // 👇 ACTUALIZADO: Envía hora_inicio y hora_fin al backend 👇
       const res = await fetch(url, { 
         method: method, 
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
@@ -168,12 +168,12 @@ function DashboardPage({ setVistaActual, usuarioActivo, setUsuarioActivo }) {
           centro_id: nuevoTurno.centro_id, 
           especialidad_requerida: nuevoTurno.especialidad, 
           fecha_turno: nuevoTurno.fecha, 
-          horario: nuevoTurno.horario, 
+          hora_inicio: nuevoTurno.hora_inicio, 
+          hora_fin: nuevoTurno.hora_fin, 
           valor_turno: limpiarDinero(nuevoTurno.valor_turno), 
           tipo_servicio: nuevoTurno.tipo_servicio, 
           ubicacion_especifica: nuevoTurno.ubicacion_especifica, 
-          descripcion: nuevoTurno.descripcion,
-          nivel_urgencia: nuevoTurno.nivel_urgencia 
+          descripcion: nuevoTurno.descripcion
         }) 
       });
       

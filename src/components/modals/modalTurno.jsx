@@ -1,9 +1,22 @@
 import React from 'react';
-import { X, Activity, Building2, Edit, Target } from 'lucide-react';
+import { X, Activity, Building2, Edit, Target, Clock } from 'lucide-react';
 import { formatearDinero } from '../../utils/formatters';
 
 export default function ModalTurno({ modalCrearTurno, setModalCrearTurno, modoEdicion, handleCrearTurno, nuevoTurno, setNuevoTurno, centros, cargando }) {
   if (!modalCrearTurno) return null;
+
+  // Función mágica: Si elige un bloque fijo, autocompleta las horas exactas
+  const handleCambioBloqueFijo = (e) => {
+    const valor = e.target.value;
+    let inicio = '';
+    let fin = '';
+
+    if (valor.includes('08:00 - 14:00')) { inicio = '08:00'; fin = '14:00'; }
+    if (valor.includes('14:00 - 20:00')) { inicio = '14:00'; fin = '20:00'; }
+    if (valor.includes('20:00 - 08:00')) { inicio = '20:00'; fin = '08:00'; }
+
+    setNuevoTurno({ ...nuevoTurno, horario: valor, hora_inicio: inicio, hora_fin: fin });
+  };
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animation-fadeIn">
@@ -15,6 +28,7 @@ export default function ModalTurno({ modalCrearTurno, setModalCrearTurno, modoEd
         </div>
         
         <form className="space-y-4" onSubmit={handleCrearTurno}>
+          {/* SEDE Y ESPECIALIDAD */}
           <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-2">
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-1">Sede Clínica (Ubicación)</label>
@@ -38,6 +52,7 @@ export default function ModalTurno({ modalCrearTurno, setModalCrearTurno, modoEd
             </div>
           </div>
 
+          {/* SERVICIO Y UBICACIÓN */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-1">Tipo de Servicio</label>
@@ -55,42 +70,42 @@ export default function ModalTurno({ modalCrearTurno, setModalCrearTurno, modoEd
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">Fecha del Turno</label>
-              <input type="date" required min={new Date().toISOString().split("T")[0]} value={nuevoTurno.fecha} onChange={(e) => setNuevoTurno({...nuevoTurno, fecha: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-shiftmed-green bg-slate-50 font-medium text-slate-700" />
+          {/* FECHA Y HORARIOS (FIJO Y PERSONALIZADO) */}
+          <div className="bg-slate-100 p-4 rounded-xl border border-slate-200">
+            <h4 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2"><Clock className="w-4 h-4 text-shiftmed-green"/> Configuración de Horario</h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">Fecha del Turno</label>
+                <input type="date" required min={new Date().toISOString().split("T")[0]} value={nuevoTurno.fecha} onChange={(e) => setNuevoTurno({...nuevoTurno, fecha: e.target.value})} className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-shiftmed-green bg-white font-medium text-slate-700" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">Bloques Fijos (Autocompletar)</label>
+                <select value={nuevoTurno.horario || ''} onChange={handleCambioBloqueFijo} className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-shiftmed-green bg-white font-medium">
+                  <option value="">Personalizado (Manual)...</option>
+                  <option value="08:00 - 14:00 (Diurno)">08:00 - 14:00 (Diurno)</option>
+                  <option value="14:00 - 20:00 (Tarde)">14:00 - 20:00 (Tarde)</option>
+                  <option value="20:00 - 08:00 (Noche)">20:00 - 08:00 (Noche)</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">Rango Horario</label>
-              <select required value={nuevoTurno.horario} onChange={(e) => setNuevoTurno({...nuevoTurno, horario: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-shiftmed-green bg-slate-50 font-medium">
-                <option value="" disabled>Selecciona horario...</option>
-                <option value="08:00 - 14:00 (Diurno)">08:00 - 14:00 (Diurno)</option>
-                <option value="14:00 - 20:00 (Tarde)">14:00 - 20:00 (Tarde)</option>
-                <option value="20:00 - 08:00 (Noche)">20:00 - 08:00 (Noche)</option>
-              </select>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">Hora de Inicio Exacta</label>
+                <input type="time" required value={nuevoTurno.hora_inicio || ''} onChange={(e) => setNuevoTurno({...nuevoTurno, hora_inicio: e.target.value, horario: ''})} className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-shiftmed-green bg-white font-medium text-slate-700" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">Hora de Fin Exacta</label>
+                <input type="time" required value={nuevoTurno.hora_fin || ''} onChange={(e) => setNuevoTurno({...nuevoTurno, hora_fin: e.target.value, horario: ''})} className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-shiftmed-green bg-white font-medium text-slate-700" />
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-1">Valor Bruto a Pagar (CLP)</label>
-              <div className="relative">
-                <input type="text" required value={nuevoTurno.valor_turno} onChange={(e) => setNuevoTurno({...nuevoTurno, valor_turno: formatearDinero(e.target.value)})} placeholder="$ 150.000" className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-shiftmed-green bg-emerald-50 font-black text-emerald-600 text-lg" />
-              </div>
-            </div>
-            {/* 👇 AQUÍ AGREGUÉ EL SELECTOR DE URGENCIA 👇 */}
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">Nivel de Urgencia (Triage)</label>
-              <select 
-                required 
-                value={nuevoTurno.nivel_urgencia || 'Normal'} 
-                onChange={(e) => setNuevoTurno({...nuevoTurno, nivel_urgencia: e.target.value})} 
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-shiftmed-green bg-slate-50 font-medium text-slate-700"
-              >
-                <option value="Normal">🟢 Normal (Planificado)</option>
-                <option value="Alta">🟠 Alta (Necesario pronto)</option>
-                <option value="Crítica">🔴 Crítica (Emergencia)</option>
-              </select>
+              <input type="text" required value={nuevoTurno.valor_turno} onChange={(e) => setNuevoTurno({...nuevoTurno, valor_turno: formatearDinero(e.target.value)})} placeholder="$ 150.000" className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-shiftmed-green bg-emerald-50 font-black text-emerald-600 text-lg" />
             </div>
           </div>
 
